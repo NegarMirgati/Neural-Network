@@ -1,4 +1,5 @@
 #include "main.h"
+int seed;
 
 using namespace std;
 
@@ -32,15 +33,28 @@ void generate_input(string addr){
 		double out = fRand(0,50);
 		write_on_file(addr, out);
 	}
-
-
 }
+
+void get_seed(){
+
+    cout<<"Enter seed for random generation" << endl;
+    cin >> seed;
+  }
+
+void init(){
+
+  get_seed();
+  srand(seed);
+  generate_input("./x.txt");
+  generate_input("./y.txt");
+  generate_input("./z.txt");
+}
+
 
 
 int main(){
 
+  init();
 
-	generate_input("./x.txt");
-	generate_input("./y.txt");
-	generate_input("./z.txt");
+  
 }
