@@ -32,6 +32,28 @@ double fRand(double fMin, double fMax)
     return fMin + f * (fMax - fMin);
 }
 
+string itos(int number) {
+  ostringstream oss;
+  oss << number;
+  return oss.str();
+}
+
+int mystoi(string number) {
+  int n;
+  stringstream ss;
+  ss << number;
+  ss >> n;
+  return n;
+}
+
+
+void set_global_vector_size(){
+
+  GlobalData::data1.set_input_size(num_of_inputs);
+  GlobalData::data1.set_firstLayerOut_size(num_of_inputs);
+  GlobalData::data1.set_inpsem_size(num_of_inputs);
+}
+
 void write_on_file(string addr, double data){
 
   ofstream myfile;
@@ -73,9 +95,12 @@ void init(){
 
   get_seed();
   srand(seed);
-  generate_input("./x.txt");
-  generate_input("./y.txt");
-  generate_input("./z.txt");
+  get_num_of_inputs();
+  set_global_vector_size();
+
+  generate_input("./0.txt");
+  generate_input("./1.txt");
+  generate_input("./2.txt");
 }
 
 

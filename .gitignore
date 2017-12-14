@@ -1,6 +1,6 @@
-*.out
-*.txt
-*.md
-main
 *.o
-
+*.h.gch
+*.txt
+*.out
+readm.md
+._.DS_Store

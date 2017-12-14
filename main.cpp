@@ -1,4 +1,6 @@
 #include "main.h"
+#include "net.h"
+
 int seed;
 
 using namespace std;
@@ -14,7 +16,7 @@ double fRand(double fMin, double fMax)
 void write_on_file(string addr, double data){
 
   ofstream myfile;
-  myfile.open(addr, ios_base::app);
+  myfile.open(addr.c_str(), ios_base::app);
 
   if (myfile.is_open())
   	myfile << data << " ";
@@ -55,6 +57,11 @@ void init(){
 int main(){
 
   init();
+  vector<unsigned> topology;
+  topology.push_back(3);
+  topology.push_back(10);
+  topology.push_back(1);
+  Net mynet(topology);
 
   
 }
