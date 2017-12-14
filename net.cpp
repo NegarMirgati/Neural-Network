@@ -2,7 +2,7 @@
 
 using namespace std;
 
-pthread_t *layer1_threads, *layer2_threads, *layer3_threads; 
+//pthread_t *layer1_threads, *layer2_threads, *layer3_threads; 
 
 
 Net::Net(const vector<unsigned>& _topology){
@@ -13,12 +13,37 @@ Net::Net(const vector<unsigned>& _topology){
 }
 
 
-void Net::feedForward(){
-
-}
-
 
 void Net::startNet(){
+
+   pthread_t myThread1[l1.size()];
+   pthread_t myThread2[l2.size()];
+   pthread_t myThread3[l3.size()];
+   void* ret_join;
+
+   startFirstLayer(myThread1);
+   startSecondLayer(myThread2);
+
+   for(int i = 0 ; i < l1.size() ; i++)
+      pthread_join(myThread1[i], &ret_join);
+
+    for(int i = 0 ; i < l2.size() ; i++){
+      pthread_join(myThread2[i], &ret_join);
+      cout<<"Thread "<< i << "exited"<<endl;
+    }
+
+  
+
+   cout<<"salammmmm"<<endl;
+
+
+cout<<"kdkdkdkdkdkd"<<endl;
+ /*   for(int i = 0 ; i < l2.size() ; i++)
+     {
+      pthread_join(myThread2[i], &ret_join);
+      cout<<"Thread "<< i << "exited"<<endl;
+    }*/
+cout<<"llkl[roy[esoksjrclweac"<<endl;
 
 
 
@@ -38,17 +63,26 @@ void *helper_runFN(void* args){
 
 }
 
+void* helper_runHN(void* args){
 
-void Net::startFirstLayer(){
+   runHN_args *ptr = (runHN_args*) args;
 
- pthread_t myThread1[l1.size()];
- pthread_t myThread2[l2.size()];
- pthread_t myThread3[l3.size()];
+  HNeuron* nptr = ptr->ptr ; //cout<<"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
+  //cout<<"running neuron " << ptr->neuron_num;
+  nptr-> runNeuron(ptr->neuron_num);
 
- layer1_threads = myThread1;
- layer2_threads = myThread2;
- layer3_threads = myThread3;
-  void* ret_join;
+  //cout <<" hello world!!!! " <<ptr->neuron_num<< endl;
+}
+
+
+void Net::startFirstLayer(pthread_t* myThread1){
+
+ //pthread_t myThread1[l1.size()];
+
+
+ //layer1_threads = myThread1;
+
+  //void* ret_join;
 
 
 for(int i = 0 ; i < l1.size() ; i++){
@@ -64,15 +98,37 @@ for(int i = 0 ; i < l1.size() ; i++){
   args->ptr = ptr;
   args->neuron_num = neuron_num;
 
-  pthread_create(&layer1_threads[i], 0, helper_runFN, args);
+  pthread_create(&myThread1[i], 0, helper_runFN, args);
   //write(STDOUT_FILENO,"^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&\n", 25);
 
 
 
   }
 
-  for(int k = 0 ; k<3 ; k++)
-      pthread_join(layer1_threads[k], &ret_join);
+  /*for(int k = 0 ; k<3 ; k++)
+      pthread_join(layer1_threads[k], &ret_join);*/
+
+
+}
+
+
+void Net::startSecondLayer(pthread_t* myThread2){
+
+  for(int i = 0; i < l2.size() ; i++){
+
+    int neuron_num = i;
+
+    HNeuron* ptr = &l2[i];
+
+    runHN_args* args = new runHN_args();
+    args->ptr = ptr;
+    args->neuron_num = neuron_num;
+    pthread_create(&myThread2[i], 0, helper_runHN, args);
+
+    //write(STDOUT_FILENO,"^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&\n", 25);
+
+  }
+
 
 
 }
@@ -268,7 +324,7 @@ int main(){
   mynet.readFirstLayerWeights();
   mynet.readSecondLayerWeights();
   mynet.buildNet();
-  mynet.startFirstLayer();
+  mynet.startNet();
   mynet.printarr();
 
   

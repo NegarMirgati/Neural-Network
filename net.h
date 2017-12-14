@@ -27,6 +27,12 @@ typedef struct helper_runFN{
 	FNeuron* ptr;
 } runFN_args;
 
+typedef struct helper_runHN{
+
+	int neuron_num;
+	HNeuron* ptr;
+} runHN_args;
+
 
 
 class Net{
@@ -34,14 +40,15 @@ class Net{
 	public:
 
 		Net(const std::vector<unsigned>& _topolopy);
-		void feedForward();
+
 		void getResults();
 		void readFirstLayerWeights();
 		void readSecondLayerWeights();
 		void getLayersInfoAddr();
 		void buildNet();
 		void startNet();
-		void startFirstLayer();
+		void startFirstLayer(pthread_t*);
+		void startSecondLayer(pthread_t*);
 		void printarr();
 
 

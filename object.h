@@ -63,7 +63,7 @@ struct Object{
 
 				inp_sem[i].resize(3);
 				for( int j = 0 ; j < 3 ; j++){
-					sem_init(&inp_sem[i][j].rw_mutex, 0, 1);
+					sem_init(&inp_sem[i][j].rw_mutex, 0, 0);
 					sem_init(&inp_sem[i][j].mutex, 0, 1);
 					inp_sem[i][j].read_count = 0;
 				}

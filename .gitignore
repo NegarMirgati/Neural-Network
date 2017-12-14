@@ -4,3 +4,7 @@
 *.out
 readm.md
 ._.DS_Store
+Makefile~
+._*
+*~
+net
