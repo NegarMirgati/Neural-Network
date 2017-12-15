@@ -2,16 +2,20 @@
 
 using namespace std;
 
-/*Neuron::Neuron(){
 
-	/*for(unsigned i = 0; i < numOutputs ; i++){
+void HNeuron::setBias(double Bias){
 
-		outputWeights.push_back(Connection());
-		cout<<"Assigning weight"<< i << " to neuron which equals to "<< weights[i] << endl;
-		outputWeights.back().weight = weights[i];
-	}
+	cout<<" Setting Bias " << Bias << endl;
 
-}*/
+	this->bias = Bias;
+}
+
+void ONeuron::setBias(double Bias){
+
+	cout<<" Setting Bias " << Bias << endl;
+
+	this->bias = Bias;
+}
 
 void Neuron::setWeights(unsigned numOutputs, std::vector<double> weights){
 
@@ -39,130 +43,106 @@ void FNeuron::runNeuron(int neuron_num){
 	int counter = 0;
 
 	string addr = "./" + itos(neuron_num) + ".txt";
-	//cout<<"addr is "<<addr << endl;
+
 
 	string temp = itos(neuron_num);
-	//write(STDOUT_FILENO, "Hello from : ", 12);
-	//write(STDOUT_FILENO, temp.c_str(), temp.size());
+
 	myfile.open(addr.c_str());
     
 	while ( myfile >> line ){
 
-		//cout<<"Waiting Here" << endl;
-        
-		//sem_wait( &GlobalData::data1.inp_sem[counter][neuron_num].rw_mutex );
-		//cout<<"updating value of" << neuron_num << " row " << counter << endl ;
-		//write(STDOUT_FILENO, temp.c_str(), temp.size());
 		GlobalData::data1.input[counter][neuron_num] = atof(line.c_str());
-		sem_post( &GlobalData::data1.inp_sem[counter][neuron_num].rw_mutex);
+		sem_post( &GlobalData::data1.inp_sem[counter].rw_mutex);
 		counter++;
 
 	}
 	
 }
 
-bool readcount_is_zero(int i){
-
-	if(GlobalData::data1.inp_sem[i][0].read_count == 0 &&
-           	   GlobalData::data1.inp_sem[i][1].read_count == 0 &&
-               GlobalData::data1.inp_sem[i][2].read_count == 0)
-		return true;
-	return false;
-}
-
-void wait_mutex(int i){
-
-	        sem_wait(&GlobalData::data1.inp_sem[i][0].mutex);
-            sem_wait(&GlobalData::data1.inp_sem[i][1].mutex);
-            sem_wait(&GlobalData::data1.inp_sem[i][2].mutex);
-}
-
-void wait_rw_mutex(int i){
-
-			sem_wait(&GlobalData::data1.inp_sem[i][0].rw_mutex);
-            sem_wait(&GlobalData::data1.inp_sem[i][1].rw_mutex);
-            sem_wait(&GlobalData::data1.inp_sem[i][2].rw_mutex);
-
-}
-
-void signal_mutex(int i){
-
-			sem_post(&GlobalData::data1.inp_sem[i][0].mutex);
-            sem_post(&GlobalData::data1.inp_sem[i][1].mutex);
-            sem_post(&GlobalData::data1.inp_sem[i][2].mutex);
-}
-void signal_rw_mutex(int i){
-
-			sem_post(&GlobalData::data1.inp_sem[i][0].rw_mutex);
-            sem_post(&GlobalData::data1.inp_sem[i][1].rw_mutex);
-            sem_post(&GlobalData::data1.inp_sem[i][2].rw_mutex);
-}
-void incdec_readcount(int i, int val){
-
-	        GlobalData::data1.inp_sem[i][0].read_count += val;
-            GlobalData::data1.inp_sem[i][1].read_count += val;
-            GlobalData::data1.inp_sem[i][2].read_count += val;
-}
-
-bool readcount_is_one(int i){
-
-	if(GlobalData::data1.inp_sem[i][0].read_count &&
-           	   GlobalData::data1.inp_sem[i][1].read_count &&
-               GlobalData::data1.inp_sem[i][2].read_count)
-		return true;
-	return false;
-}
 
 void HNeuron::runNeuron(int neuron_num){
 
-	//cout<<"Hello khare badbakht"<<endl;
-
+	
 	vector <bool> calculated (GlobalData::data1.input.size(), false);
 
 	for( int i = 0; i < calculated.size() ; i++){
 
 		if( calculated[i] == false ){
 
-			int hlayersize = GlobalData::data1.hiddenLayerSize;
-            int location = neuron_num * GlobalData::data1.hiddenLayerSize + i;
+			int hiddenLayerSize = GlobalData::data1.hiddenLayerSize;
 
-            wait_mutex(i);
 
-            cout<<"AA"<<endl;
+            sem_wait(&GlobalData::data1.inp_sem[i].mutex);
 
-            int val = 1;
-            incdec_readcount(i, val);
+            
+            GlobalData::data1.inp_sem[i].read_count += 1;
 
-            if(readcount_is_one(i))
-            	wait_rw_mutex(i);
+          if( GlobalData::data1.inp_sem[i].read_count == 1 )
+            	sem_wait(&GlobalData::data1.inp_sem[i].rw_mutex);
 
-            cout<<"BB "<< endl;
 
-            signal_mutex(i);
-            //cout<<"Neuron number "<< neuron_num << " ";
-            //write(STDOUT_FILENO, "khar\n", 5);
-            //write(STDOUT_FILENO, itos(neuron_num).c_str(), 2);
-            //cout << GlobalData::data1.input[i][0] << " " << GlobalData::data1.input[i][1] <<" "<< GlobalData::data1.input[i][2] << endl;
+            sem_post(&GlobalData::data1.inp_sem[i].mutex);
+
+            ///Perform Reading //
+
+            //for(int counter = 0 ; counter < hiddenLayerSize ; counter ++){
+
+           // int location = i % hiddenLayerSize;
+            //cout << " i =" << i << " neuron num  = " << neuron_num << endl;
+            //cout<<"Location = " << location << endl;
+    
+            FNeuron* n1 =  &this->prevLayer[0];
+            FNeuron* n2 =  &this->prevLayer[1];
+            FNeuron* n3 =  &this->prevLayer[2];
+
+            double w1 = n1->outputWeights[neuron_num].weight;
+            double w2 = n2->outputWeights[neuron_num].weight;
+            double w3 = n3->outputWeights[neuron_num].weight;
+            
+            cout << "I am neuron " << neuron_num << " and my bias value is : " << bias << endl;
+            cout<<" w1 = " <<  w1 << endl; 
+             cout<<" w2 = " << w2 << endl;
+             cout<<" w3 = " << w3 << endl;
+
+            double d1 = GlobalData::data1.input[i][0];
+            double d2 = GlobalData::data1.input[i][1];
+            double d3 = GlobalData::data1.input[i][2];
+
+            cout<< " d1  = " << d1 << " d2 = "<< d2 <<" d3 = "<<d3 << endl;
+
+            double res = calcResult(d1, d2, d3, w1, w2, w3);
+
+            cout << " res is : "<< res << endl;
+
+            //GlobalData::data1.firstLayerOut[location] = res;*/
             calculated[i] = true;
 
-            wait_mutex(i);
-            incdec_readcount(i, -1);
+            
+            //This Neuron has done its part on data number i
+            ///The semaphore on data set number #i gets incrementer
+            ///Until its value becomes 1 , the initial value is 10 (num of hidden layer neurons)
+            ///This means that all hidden neurons have done their part on data set number #i
+            cout<<"size of hidden_sem "<< GlobalData::data1.hidden_sem.size() << endl;
+            cout<<" i = " <<i << endl;
+            //sem_post(&GlobalData::data1.hidden_sem[i].rw_mutex); 
 
-            if(readcount_is_zero(i))
-            	signal_rw_mutex(i);
 
-            signal_mutex(i);
+            //End of Reading
+       // }
 
 
-            //sem_wait(&GlobalData::data1.inp_sem[i][0].rw_mutex);
-			///calc
-			//i = 0;
-			//continue;
+            
+
+            sem_wait(&GlobalData::data1.inp_sem[i].mutex);
+            GlobalData::data1.inp_sem[i].read_count += -1;
+
+            if(GlobalData::data1.inp_sem[i].read_count == 0)  
+            	sem_post(&GlobalData::data1.inp_sem[i].rw_mutex);
+
+            sem_post(&GlobalData::data1.inp_sem[i].mutex);
+
 		}
 	}
-
-	//cout<<" Bye Bye khare Badbakht" << endl;
-
 
 
 }
@@ -171,4 +151,93 @@ void HNeuron::runNeuron(int neuron_num){
 void ONeuron::runNeuron(int neuron_num){
 
 
+
+
+    /// A vector of size #num_of_inputs 
+	vector<bool> calculated (GlobalData::data1.input.size(), -100);
+
+	int hiddenLayerSize = GlobalData::data1.hiddenLayerSize;
+	int num_of_outputs = GlobalData::data1.firstLayerOut.size();
+
+	/// i changes form 0 to #num_of_inputs 
+
+	for(int i = 0 ; i < calculated.size(); i++){
+
+		sem_wait(&GlobalData::data1.hidden_sem[i].mutex);
+		GlobalData::data1.hidden_sem[i].read_count += 1;
+
+		if(GlobalData::data1.hidden_sem[i].read_count == 1)
+			sem_wait(&GlobalData::data1.hidden_sem[i].rw_mutex);
+
+		sem_post(&GlobalData::data1.hidden_sem[i].mutex);
+
+		//////////Start Reading
+
+
+        double res = calcResult(i);
+
+        cout << " Output for data #" << i << res << endl;
+
+
+
+
+		////Stop Reading
+		sem_wait(&GlobalData::data1.hidden_sem[i].mutex);
+		GlobalData::data1.hidden_sem[i].read_count += -1;
+
+		if(GlobalData::data1.hidden_sem[i].read_count == 0)
+			sem_post(&GlobalData::data1.hidden_sem[i].rw_mutex);
+
+		sem_post(&GlobalData::data1.hidden_sem[i].mutex);
+
+
+
+	}
+
+
+
+
+}
+
+double HNeuron::calcResult(double x, double y, double z , double w1, double w2, double w3){
+
+	return tanh(x*w1 + y*w2 + z*w3 + this->bias);
+
+
+}
+
+double ONeuron::calcResult(int i){
+
+	int hiddenLayerSize = GlobalData::data1.hiddenLayerSize;
+
+	double output = 0;
+
+
+	for(int counter = 0 ; counter < hiddenLayerSize ; counter ++ ){
+
+		int location = counter * hiddenLayerSize + i ;
+		int weight = this->prevLayer[i].outputWeights[0].weight;
+
+		output += GlobalData::data1.firstLayerOut[i] * weight;
+	}
+
+	output += this->bias;
+
+	return output;
+
+
+
+}
+
+void HNeuron::setPrevLayerRefrence(const Layer1& ref){
+
+	prevLayer = ref;
+	cout<<" Hello From HNeuron and prev layer size is :" << prevLayer.size();
+	
+}
+
+void ONeuron::setPrevLayerRefrence(const Layer2& ref){
+
+	prevLayer = ref;
+	cout<<" Hello From ONeuron and prev layer size is :" << prevLayer.size();
 }

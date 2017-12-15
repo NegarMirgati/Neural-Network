@@ -1,0 +1,27 @@
+#include<iostream>
+#include <pthread.h>
+#include<semaphore.h>
+
+sem_t mysem;
+
+using namespace std;
+
+void* f1(){
+	
+	cout<<"1"<<endl;
+}
+
+void* f2(){
+	
+	cout<<"1"<<endl;
+}
+
+void* f3(){
+	
+	cout<<"1"<<endl;
+}
+
+int main(){
+	
+	sem_init(&myem,0,-2);
+}

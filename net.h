@@ -9,6 +9,8 @@
 #include <fstream>
 #include <cstdlib>
 #include <pthread.h>
+#include <cmath>
+#include <tgmath.h>
 
 #include "neuron.h"
 #include "tools.h"
@@ -33,6 +35,12 @@ typedef struct helper_runHN{
 	HNeuron* ptr;
 } runHN_args;
 
+typedef struct helper_runON{
+
+	int neuron_num;
+	ONeuron* ptr;
+} runON_args;
+
 
 
 class Net{
@@ -41,15 +49,19 @@ class Net{
 
 		Net(const std::vector<unsigned>& _topolopy);
 
-		void getResults();
 		void readFirstLayerWeights();
 		void readSecondLayerWeights();
+		void readSecondLayerBias(); 
+		void readOutputLayerBias(); 
+
 		void getLayersInfoAddr();
 		void buildNet();
 		void startNet();
 		void startFirstLayer(pthread_t*);
 		void startSecondLayer(pthread_t*);
+		void startOutputLayer(pthread_t*);
 		void printarr();
+		double calcRealOutputs(double, double, double);
 
 
 

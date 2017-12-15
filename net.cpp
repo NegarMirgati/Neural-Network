@@ -2,17 +2,11 @@
 
 using namespace std;
 
-//pthread_t *layer1_threads, *layer2_threads, *layer3_threads; 
-
-
 Net::Net(const vector<unsigned>& _topology){
 
 	this->topology = _topology;
 
-
 }
-
-
 
 void Net::startNet(){
 
@@ -23,29 +17,25 @@ void Net::startNet(){
 
    startFirstLayer(myThread1);
    startSecondLayer(myThread2);
+   //startOutputLayer(myThread3);
 
-   for(int i = 0 ; i < l1.size() ; i++)
-      pthread_join(myThread1[i], &ret_join);
-
-    for(int i = 0 ; i < l2.size() ; i++){
+   for(int i = 0 ; i < l2.size() ; i++){
       pthread_join(myThread2[i], &ret_join);
       cout<<"Thread "<< i << "exited"<<endl;
     }
 
-  
+   for(int i = 0 ; i < l1.size() ; i++)
+      pthread_join(myThread1[i], &ret_join);
 
-   cout<<"salammmmm"<<endl;
 
+    cout<<"HERRRREEEEE"<<endl;
 
-cout<<"kdkdkdkdkdkd"<<endl;
- /*   for(int i = 0 ; i < l2.size() ; i++)
-     {
-      pthread_join(myThread2[i], &ret_join);
-      cout<<"Thread "<< i << "exited"<<endl;
+    cout<<"BYE BYE"<<endl;
+
+    /*for(int i = 0 ; i < l3.size() ; i++){
+      pthread_join(myThread3[i], &ret_join);
+      cout<<"Thread output "<< i << "exited"<<endl;
     }*/
-cout<<"llkl[roy[esoksjrclweac"<<endl;
-
-
 
 }
 
@@ -53,13 +43,9 @@ void *helper_runFN(void* args){
 
   runFN_args *ptr = (runFN_args*) args;
 
-  FNeuron* nptr = ptr->ptr ;
-  //cout<<"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-  //cout<<"running neuron " << ptr->neuron_num;
-  nptr-> runNeuron(ptr->neuron_num);
+  FNeuron* fn_ptr = ptr->ptr ;
 
-  //cout <<" hello world!!!! " <<ptr->neuron_num<< endl;
- 
+  fn_ptr-> runNeuron(ptr->neuron_num); 
 
 }
 
@@ -67,22 +53,23 @@ void* helper_runHN(void* args){
 
    runHN_args *ptr = (runHN_args*) args;
 
-  HNeuron* nptr = ptr->ptr ; //cout<<"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl;
-  //cout<<"running neuron " << ptr->neuron_num;
-  nptr-> runNeuron(ptr->neuron_num);
+  HNeuron* hn_ptr = ptr->ptr ; 
+  hn_ptr-> runNeuron(ptr->neuron_num);
 
-  //cout <<" hello world!!!! " <<ptr->neuron_num<< endl;
+
+}
+
+void* helper_runON(void* args){
+
+   runON_args *ptr = (runON_args*) args;
+
+  ONeuron* on_ptr = ptr->ptr ; 
+  on_ptr-> runNeuron(ptr->neuron_num);
+
 }
 
 
 void Net::startFirstLayer(pthread_t* myThread1){
-
- //pthread_t myThread1[l1.size()];
-
-
- //layer1_threads = myThread1;
-
-  //void* ret_join;
 
 
 for(int i = 0 ; i < l1.size() ; i++){
@@ -99,15 +86,9 @@ for(int i = 0 ; i < l1.size() ; i++){
   args->neuron_num = neuron_num;
 
   pthread_create(&myThread1[i], 0, helper_runFN, args);
-  //write(STDOUT_FILENO,"^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&\n", 25);
-
-
+ 
 
   }
-
-  /*for(int k = 0 ; k<3 ; k++)
-      pthread_join(layer1_threads[k], &ret_join);*/
-
 
 }
 
@@ -118,20 +99,88 @@ void Net::startSecondLayer(pthread_t* myThread2){
 
     int neuron_num = i;
 
-    HNeuron* ptr = &l2[i];
+    HNeuron* my_ptr = &l2[i];
 
     runHN_args* args = new runHN_args();
-    args->ptr = ptr;
+    args->ptr = my_ptr;
     args->neuron_num = neuron_num;
     pthread_create(&myThread2[i], 0, helper_runHN, args);
 
-    //write(STDOUT_FILENO,"^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&\n", 25);
+    
 
   }
 
 
 
 }
+
+void Net::startOutputLayer(pthread_t* myThread3){
+
+  for(int i = 0 ; i < l3.size() ; i++){
+
+    int neuron_num = i;
+    ONeuron* ptr = &l3[i];
+
+    runON_args* args = new runON_args();
+    args->ptr = ptr;
+    args->neuron_num = neuron_num;
+    pthread_create(&myThread3[i], 0, helper_runON, args);
+
+
+  }
+
+}
+
+
+void Net::readSecondLayerBias(){
+
+  ifstream myfile;
+  string line;
+  int counter = 0;
+  myfile.open(layersInfoAddr.c_str(),  ios_base::app);
+  getline(myfile, line);
+
+  while(line != "b1:(bias of hidden neurons)")
+    getline(myfile, line);
+
+  /////////Setting
+  getline(myfile, line);
+
+  while(line != "IW1:(weights of input neurons to hidden neurons)"){
+
+    cout<<"bias is "<< line << endl;
+    cout<<"Neuron Num is "<< counter << endl;
+
+    l2[counter].setBias(atof(line.c_str()));
+
+    getline(myfile, line);
+
+    counter++;
+  }
+
+  myfile.close();
+
+}
+
+  void Net::readOutputLayerBias(){
+
+    ifstream myfile;
+    string line;
+
+    cout<<" size of l3 "<<l3.size()<<endl;
+    myfile.open(layersInfoAddr.c_str(), ios_base::app);
+    getline(myfile, line);
+
+    while(line != "b2:(bias of output neuron)")
+      getline(myfile, line);
+
+    getline(myfile,line);
+    l3[0].setBias(atof(line.c_str()));
+
+    myfile.close();
+
+  }
+
 
 
 void Net::buildNet(){
@@ -175,6 +224,7 @@ void Net::buildNet(){
 
           HNeuron myn;
           myn.setWeights(numOutputs, weights);
+          myn.setPrevLayerRefrence(l1);
           l2.push_back(myn);
 
 
@@ -182,9 +232,10 @@ void Net::buildNet(){
 
       else if ( i == 2){
 
-
+        cout<<" making layer 3"<< endl;
         ONeuron myn;
         myn.setWeights(numOutputs, weights);
+        myn.setPrevLayerRefrence(l2);
         l3.push_back(myn);
 
       }            
@@ -235,8 +286,6 @@ void Net::readFirstLayerWeights(){
   				vector<string> tokens = split(weights, ' ');
 
   				firstLayerWeights.push_back(tokens);
-
-  				
 
 
   			}
@@ -310,6 +359,8 @@ int main(){
 
   topology.push_back(num);
 
+  topology.push_back(1);
+
   //set the hidden layer size in global data
 
   GlobalData::data1.hiddenLayerSize = num ;
@@ -323,9 +374,17 @@ int main(){
 
   mynet.readFirstLayerWeights();
   mynet.readSecondLayerWeights();
+
   mynet.buildNet();
+
+  mynet.readSecondLayerBias();
+  mynet.readOutputLayerBias();
+
+
   mynet.startNet();
-  mynet.printarr();
+  //mynet.printarr();
+
+  return 0;
 
   
 
@@ -342,6 +401,21 @@ void Net::printarr(){
       cout << GlobalData::data1.input[i][j] << " ";
     cout<<endl;
   }
+}
+
+
+double calcRealOutputs(double d1, double d2, double d3){
+
+  /*double result = -1*in2;
+  double res1 = sqrt( abs( pow(d2,2) - 4*d1*d3 ) );
+  double res2 = 2*d1 + sin(d1 * M_PI);
+
+  result += res1/res2;*/
+
+  return 1.12;
+
+
+
 }
 
 

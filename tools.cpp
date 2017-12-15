@@ -52,6 +52,7 @@ void set_global_vector_size(){
   GlobalData::data1.set_input_size(num_of_inputs);
   GlobalData::data1.set_firstLayerOut_size(num_of_inputs);
   GlobalData::data1.set_inpsem_size(num_of_inputs);
+  GlobalData::data1.set_hiddensem_size(num_of_inputs);
 }
 
 void write_on_file(string addr, double data){
